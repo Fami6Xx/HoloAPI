@@ -1,0 +1,5 @@
+name: HoloAPI
+version: '${project.version}'
+main: me.famix.holoapi.HoloAPI
+authors: [ Fami6Xx ]
+description: HolographicDisplay API upgraded
