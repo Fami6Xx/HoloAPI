@@ -2,9 +2,12 @@ package me.famix.holoapi.handlers;
 
 import com.gmail.filoghost.holographicdisplays.api.VisibilityManager;
 import me.famix.holoapi.HoloAPI;
-import me.famix.holoapi.types.FollowingHolo;
+import me.famix.holoapi.tools.rayCast.RayCast;
+import me.famix.holoapi.tools.rayCast.RayCastResult;
+import me.famix.holoapi.types.FollowingHologram;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -18,24 +21,24 @@ import java.util.stream.Collectors;
 public class followHandler {
     //ToDo:
     // - Optimize
-    // - Static Holo
-    // - Fix ConcurrentModExc when turning off system
+    // - Static Hologram implementation
+    // - Fix ConcurrentModificationException when turning off system
 
 
-    private static final HashMap<UUID, List<FollowingHolo>> map = new HashMap<>();
-    public static List<FollowingHolo> getList(UUID uuid) {
+    private static final HashMap<UUID, List<FollowingHologram>> map = new HashMap<>();
+    public static List<FollowingHologram> getList(UUID uuid) {
         return map.get(uuid) == null ? new ArrayList<>() : map.get(uuid);
     }
-    public static void addToList(UUID uuid, FollowingHolo holo){
-        List<FollowingHolo> l = getList(uuid);
+    public static void addToList(UUID uuid, FollowingHologram holo){
+        List<FollowingHologram> l = getList(uuid);
         l.add(holo);
         if(map.containsKey(uuid))
             map.replace(uuid, l);
         else
             map.put(uuid, l);
     }
-    public static void removeFromList(UUID uuid, FollowingHolo holo){
-        List<FollowingHolo> l = getList(uuid);
+    public static void removeFromList(UUID uuid, FollowingHologram holo){
+        List<FollowingHologram> l = getList(uuid);
         l.remove(holo);
         if(l.size() != 0)
             map.replace(uuid, l);
@@ -43,11 +46,11 @@ public class followHandler {
             map.remove(uuid);
     }
     public static void clearList(UUID uuid){
-        List<FollowingHolo> list = map.get(uuid);
+        List<FollowingHologram> list = map.get(uuid);
 
-        FollowingHolo[] arr = list.toArray(new FollowingHolo[0]);
+        FollowingHologram[] arr = list.toArray(new FollowingHologram[0]);
 
-        for(FollowingHolo followingHolo : arr){
+        for(FollowingHologram followingHolo : arr){
             followingHolo.destroy();
         }
     }
@@ -73,77 +76,8 @@ public class followHandler {
                 hashMap.replace(uuid, list);
             }
 
-            public boolean rayCast(Vector vector, Location startLoc, Location endLoc, double increment, double maxDistence){
-                boolean returnValue = true;
 
-                vector.normalize();
-                vector.multiply(increment);
-
-                double count = 0;
-                //double visCount = 0; - For testing
-
-                while(count <= maxDistence){
-                    count += increment;
-
-                    Block block = startLoc.getBlock();
-                    Location blockLoc = block.getLocation();
-
-                    startLoc.add(vector);
-
-/* Visualize raycast
-                    visCount++;
-                    if(visCount % 10 == 0)
-                    new ParticleBuilder(Particle.REDSTONE)
-                            .color(Color.RED)
-                            .count(0)
-                            .location(startLoc)
-                            .receivers(player)
-                            .spawn();
-                            - Put this on start, if u want to get it precisely
-
-                    if(visCount % 10 == 0) {
-                        float forAdd = 0.25f;
-                        for (double x = blockLoc.getBlockX(); x <= blockLoc.getBlockX() + 1; x += forAdd) {
-                            for (double y = blockLoc.getBlockY(); y <= blockLoc.getBlockY() + 1; y += forAdd) {
-                                for (double z = blockLoc.getBlockZ(); z <= blockLoc.getBlockZ() + 1; z += forAdd) {
-                                    boolean edge = false;
-                                    if ((x == blockLoc.getBlockX() || x == blockLoc.getBlockX() + 1) &&
-                                            (y == blockLoc.getBlockY() || y == blockLoc.getBlockY() + 1)) edge = true;
-                                    if ((z == blockLoc.getBlockZ() || z == blockLoc.getBlockZ() + 1) &&
-                                            (y == blockLoc.getBlockY() || y == blockLoc.getBlockY() + 1)) edge = true;
-                                    if ((x == blockLoc.getBlockX() || x == blockLoc.getBlockX() + 1) &&
-                                            (z == blockLoc.getBlockZ() || z == blockLoc.getBlockZ() + 1)) edge = true;
-                                    if (edge) {
-                                        Location newLoc = new Location(blockLoc.getWorld(), x, y, z);
-                                        new ParticleBuilder(Particle.REDSTONE)
-                                                .color(Color.BLACK)
-                                                .count(0)
-                                                .receivers(player)
-                                                .location(newLoc)
-                                                .spawn();
-                                    }
-                                }
-                            }
-                        }
-                    }
-*/
-                    if(
-                            blockLoc.getBlockX() == endLoc.getBlockX() &&
-                            blockLoc.getBlockY() == endLoc.getBlockY() &&
-                            blockLoc.getBlockZ() == endLoc.getBlockZ()
-                    ){
-                        return returnValue;
-                    }
-                    if(block.isLiquid()) continue;
-                    if(block.isEmpty()) continue;
-                    if(block.getType().isTransparent()) continue;
-                    if(!block.getType().isOccluding()) continue;
-                    returnValue = false;
-                }
-                return returnValue;
-            }
-
-            public boolean checkConditions(Player player, FollowingHolo holo){
+            public boolean checkConditions(Player player, FollowingHologram holo){
                 boolean returnValue = true;
 
                 if(player == holo.getFollowing()){
@@ -157,20 +91,23 @@ public class followHandler {
                 if(!holo.canSeeThroughBlocks()){
                     Location startLoc = holo.getFollowing().getLocation().add(0, holo.getFollowing().getHeight(), 0).clone();
 
-                    boolean rayResult = rayCast(vector, startLoc, player.getEyeLocation(), 0.1, holo.getDistance());
+                    RayCastResult result = new RayCast(vector, startLoc.getWorld(), player.getEyeLocation(), holo.getDistance(), 0.1)
+                            .enableIgnoreSeeThroughMaterials()
+                            .showRayCast(player)
+                            .shoot();
 
-                    if(!rayResult){
+                    if(result.hasHit())
                         returnValue = false;
-                    }
                 }
                 return returnValue;
             }
 
             @Override
             public void run() {
-                ((HashMap<UUID, List<FollowingHolo>>) map.clone()).forEach(((uuid, followingHolos) -> {
+                ((HashMap<UUID, List<FollowingHologram>>) map.clone()).forEach(((uuid, followingHolos) -> {
                     Entity entity = Bukkit.getEntity(uuid);
 
+                    // Check entity
                     if(entity == null){
                         clearList(uuid);
                         removeList(uuid);
@@ -190,11 +127,13 @@ public class followHandler {
                         }
                     }
 
-                    for(FollowingHolo holo : followingHolos) {
+                    for(FollowingHologram holo : followingHolos) {
                         if(holo.getHologram().isDeleted()){
                             removeList(holo.getUUID());
                             removeFromList(uuid, holo);
                         }
+
+                        // Move Hologram
 
                         holo.getHologram().teleport(
                                 entity.getLocation().add(
@@ -246,6 +185,6 @@ public class followHandler {
 
     public static void stop(){
         task.cancel();
-        ((HashMap<UUID, List<FollowingHolo>>) map.clone()).forEach((uuid, holograms) -> holograms.forEach(FollowingHolo::destroy));
+        ((HashMap<UUID, List<FollowingHologram>>) map.clone()).forEach((uuid, holograms) -> holograms.forEach(FollowingHologram::destroy));
     }
 }

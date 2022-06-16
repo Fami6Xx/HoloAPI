@@ -8,7 +8,7 @@ import org.bukkit.entity.Entity;
 
 import java.util.UUID;
 
-public class FollowingHolo {
+public class FollowingHologram {
 
     Hologram holo;
     UUID uuid;
@@ -19,7 +19,7 @@ public class FollowingHolo {
     UUID followingUUID;
 
 
-    public FollowingHolo(Entity toFollow, double visibleDistance, boolean isVisibleByDefault, boolean seeThroughBlocks){
+    public FollowingHologram(Entity toFollow, double visibleDistance, boolean isVisibleByDefault, boolean seeThroughBlocks){
         following = toFollow;
         seeThrough = seeThroughBlocks;
         if(!isVisibleByDefault)
@@ -72,6 +72,6 @@ public class FollowingHolo {
 
     @Override
     public String toString(){
-        return "FollowingHolo [" + uuid + " | " + seeThrough + " | " + distance + " | " + holo.toString() + "]";
+        return "FollowingHologram [uuid: " + uuid + ", canSeeThrough:" + seeThrough + ", maxVisibleDistance:" + distance + ", " + holo.toString() + "]";
     }
 }
