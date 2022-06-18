@@ -10,7 +10,7 @@ You must have Holographic Displays and ProtocolLib installed on your server
 
 - Maven and JavaDoc will be added after finalization of this project
 
-##Features
+## Features
 
 - Following holograms that are bonded to Entity
 - RayCast API

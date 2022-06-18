@@ -6,6 +6,7 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -14,6 +15,7 @@ public class RayCast {
     private final double distance;
     private final double increment;
     private final World world;
+    private final Location startLoc;
 
     private final ArrayList<Material> ignoredMaterials = new ArrayList<>();
     private boolean ignoreSeeThroughBlocks = false;
@@ -25,33 +27,37 @@ public class RayCast {
     private boolean visualizeBlocks = false;
     private Player player;
 
-    public RayCast(Vector vector, World world, double maxDistance){
+    public RayCast(Vector vector, World world, Location startLocation, double maxDistance){
         this.vector = vector;
         this.distance = maxDistance;
         this.increment = 0.05;
         this.world = world;
+        this.startLoc = startLocation;
     }
 
-    public RayCast(Vector vector, World world, double maxDistance, double increment){
+    public RayCast(Vector vector, World world, Location startLocation, double maxDistance, double increment){
         this.vector = vector;
         this.distance = maxDistance;
         this.increment = increment;
         this.world = world;
+        this.startLoc = startLocation;
     }
 
-    public RayCast(Vector vector, World world, Location endLocation, double maxDistance){
+    public RayCast(Vector vector, World world, Location startLocation, Location endLocation, double maxDistance){
         this.vector = vector;
         this.distance = maxDistance;
         this.increment = 0.05;
         this.endLoc = endLocation;
+        this.startLoc = startLocation;
         this.world = world;
     }
 
-    public RayCast(Vector vector, World world, Location endLocation, double maxDistance, double increment){
+    public RayCast(Vector vector, World world, Location startLocation, Location endLocation, double maxDistance, double increment){
         this.vector = vector;
         this.distance = maxDistance;
         this.increment = increment;
         this.endLoc = endLocation;
+        this.startLoc = startLocation;
         this.world = world;
     }
 
@@ -78,36 +84,36 @@ public class RayCast {
     }
 
     public RayCastResult shoot(){
-        Location startLoc = vector.toLocation(world);
-
         // Normalize vector
         vector.normalize();
 
         // Add increment to vector
         vector.multiply(increment);
 
-        double count = 0;
+        Location loc = startLoc.clone();
+
+        int count = 0;
+        int scale = BigDecimal.valueOf(distance).scale();
+        int finalDistance = (int) (distance * Math.pow(10, scale));
 
         boolean hit = false;
         Block blockHit = null;
 
-        while(count <= distance){
-            Block block = startLoc.getBlock();
+        while(count <= finalDistance){
+            Block block = loc.getBlock();
             Location blockLoc = block.getLocation();
 
             if(visualizeRay){
-                if(count % 0.2 == 0) {
-                    new ParticleBuilder(Particle.REDSTONE)
-                            .color(Color.RED)
-                            .count(0)
-                            .location(startLoc)
-                            .receivers(player)
-                            .spawn();
-                }
+                new ParticleBuilder(Particle.REDSTONE)
+                        .color(Color.RED)
+                        .count(0)
+                        .location(loc)
+                        .receivers(player)
+                        .spawn();
             }
 
             if(visualizeBlocks){
-                if(count % 0.5 == 0) {
+                if(count % 3 == 0) {
                     float forAdd = 0.25f;
                     // Calculate borders of block
                     for (double x = blockLoc.getBlockX(); x <= blockLoc.getBlockX() + 1; x += forAdd) {
@@ -121,7 +127,7 @@ public class RayCast {
                                 if ((x == blockLoc.getBlockX() || x == blockLoc.getBlockX() + 1) &&
                                         (z == blockLoc.getBlockZ() || z == blockLoc.getBlockZ() + 1)) edge = true;
                                 if (edge) {
-                                    Location newLoc = new Location(blockLoc.getWorld(), x, y, z);
+                                    Location newLoc = new Location(world, x, y, z);
                                     new ParticleBuilder(Particle.REDSTONE)
                                             .color(Color.BLACK)
                                             .count(0)
@@ -135,15 +141,18 @@ public class RayCast {
                 }
             }
 
-            count += increment;
+            count ++;
 
-            startLoc.add(vector);
+            loc.add(vector);
 
             if(endLoc != null) {
 
                 // ToDo: Find better endLoc solution
 
                 // Distance can't be used as it uses Pythagoras's theorem which is costly
+
+                // Vector should reach endLoc in 100% of time, because that vector is calculated by the end vector
+                // So maybe just check if the vector is equal to the end vector?
 
                 if (
                         blockLoc.getBlockX() == endLoc.getBlockX() &&

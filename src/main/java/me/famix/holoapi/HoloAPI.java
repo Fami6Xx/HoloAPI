@@ -10,6 +10,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public final class HoloAPI extends JavaPlugin implements Listener {
 
+    // ToDo: UpdatingLine which will have override method void update() ?
+
     @Override
     public void onEnable() {
         // Plugin startup logic

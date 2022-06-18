@@ -3,9 +3,9 @@ package me.famix.holoapi.tools.rayCast;
 import org.bukkit.block.Block;
 
 public class RayCastResult {
-    private boolean hit;
-    private boolean foundEndLocation;
-    private Block hitBlock;
+    private final boolean hit;
+    private final boolean foundEndLocation;
+    private final Block hitBlock;
 
 
     public RayCastResult(boolean hit, Block hitBlock, boolean foundEndLocation){

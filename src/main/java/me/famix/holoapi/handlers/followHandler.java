@@ -7,8 +7,6 @@ import me.famix.holoapi.tools.rayCast.RayCastResult;
 import me.famix.holoapi.types.FollowingHologram;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -91,7 +89,7 @@ public class followHandler {
                 if(!holo.canSeeThroughBlocks()){
                     Location startLoc = holo.getFollowing().getLocation().add(0, holo.getFollowing().getHeight(), 0).clone();
 
-                    RayCastResult result = new RayCast(vector, startLoc.getWorld(), player.getEyeLocation(), holo.getDistance(), 0.1)
+                    RayCastResult result = new RayCast(vector, startLoc.getWorld(), startLoc, player.getEyeLocation(), holo.getDistance(), 0.1)
                             .enableIgnoreSeeThroughMaterials()
                             .showRayCast(player)
                             .shoot();
