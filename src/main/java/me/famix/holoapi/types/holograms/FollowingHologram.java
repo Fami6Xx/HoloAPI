@@ -1,4 +1,4 @@
-package me.famix.holoapi.types;
+package me.famix.holoapi.types.holograms;
 
 import com.gmail.filoghost.holographicdisplays.api.Hologram;
 import com.gmail.filoghost.holographicdisplays.api.HologramsAPI;

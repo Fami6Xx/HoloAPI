@@ -4,7 +4,7 @@ import com.gmail.filoghost.holographicdisplays.api.VisibilityManager;
 import me.famix.holoapi.HoloAPI;
 import me.famix.holoapi.tools.rayCast.RayCast;
 import me.famix.holoapi.tools.rayCast.RayCastResult;
-import me.famix.holoapi.types.FollowingHologram;
+import me.famix.holoapi.types.holograms.FollowingHologram;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
@@ -19,7 +19,6 @@ import java.util.stream.Collectors;
 public class followHandler {
     //ToDo:
     // - Optimize
-    // - Static Hologram implementation
     // - Fix ConcurrentModificationException when turning off system
 
 
