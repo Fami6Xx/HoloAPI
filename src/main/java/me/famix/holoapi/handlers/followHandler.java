@@ -19,7 +19,6 @@ import java.util.stream.Collectors;
 public class followHandler {
     //ToDo:
     // - Optimize
-    // - Fix ConcurrentModificationException when turning off system
 
 
     private static final HashMap<UUID, List<FollowingHologram>> map = new HashMap<>();
@@ -182,6 +181,7 @@ public class followHandler {
 
     public static void stop(){
         task.cancel();
-        ((HashMap<UUID, List<FollowingHologram>>) map.clone()).forEach((uuid, holograms) -> holograms.forEach(FollowingHologram::destroy));
+        ((HashMap<UUID, List<FollowingHologram>>) map.clone()).forEach((uuid, holograms) -> holograms.forEach(followingHologram -> followingHologram.getHologram().delete()));
+        map.clear();
     }
 }
