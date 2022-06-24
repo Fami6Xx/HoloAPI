@@ -28,11 +28,15 @@ public abstract class UpdatingLine {
         new BukkitRunnable(){
             @Override
             public void run(){
-                if(!line.getParent().isDeleted())
-                    line.setText(update());
-                else
+                if(!line.getParent().isDeleted()) {
+                    String update = update();
+                    if (!line.getText().equals(update)) {
+                        line.setText(update());
+                    }
+                }else {
                     cancel();
+                }
             }
-        }.runTaskTimer(HoloAPI.getPlugin(HoloAPI.class), 0, 20);
+        }.runTaskTimerAsynchronously(HoloAPI.getPlugin(HoloAPI.class), 1, period);
     }
 }

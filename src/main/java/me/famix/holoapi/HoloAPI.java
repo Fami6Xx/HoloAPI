@@ -36,6 +36,24 @@ public final class HoloAPI extends JavaPlugin implements Listener {
                 return event.getPlayer().getHealth() + "";
             }
         };
+        new UpdatingLine(holo.getHologram().appendTextLine("")){
+            @Override
+            public String update(){
+                return event.getPlayer().getHealth() + "";
+            }
+        };
+        new UpdatingLine(holo.getHologram().appendTextLine("")){
+            @Override
+            public String update(){
+                return event.getPlayer().getHealth() + "";
+            }
+        };
+        new UpdatingLine(holo.getHologram().appendTextLine("")){
+            @Override
+            public String update(){
+                return event.getPlayer().getHealth() + "";
+            }
+        };
     }
     @EventHandler
     public void onBob(EntitySpawnEvent event){

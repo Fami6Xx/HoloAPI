@@ -42,7 +42,7 @@ public class followHandler {
             map.remove(uuid);
     }
     public static void clearList(UUID uuid){
-        List<FollowingHologram> list = map.get(uuid);
+        List<FollowingHologram> list = getList(uuid);
 
         FollowingHologram[] arr = list.toArray(new FollowingHologram[0]);
 
@@ -89,7 +89,6 @@ public class followHandler {
 
                     RayCastResult result = new RayCast(vector, startLoc.getWorld(), startLoc, player.getEyeLocation(), holo.getDistance(), 0.1)
                             .enableIgnoreSeeThroughMaterials()
-                            .showRayCast(player)
                             .shoot();
 
                     if(result.hasHit())
@@ -122,29 +121,31 @@ public class followHandler {
                             return;
                         }
                     }
+                    System.out.println("Next entity");
 
                     for(FollowingHologram holo : followingHolos) {
                         if(holo.getHologram().isDeleted()){
                             removeList(holo.getUUID());
                             removeFromList(uuid, holo);
+                            continue;
                         }
 
                         // Move Hologram
+                        System.out.println(entity.getHeight() + 0.8 + (0.25 * followingHolos.indexOf(holo)) + " - Calculated height to add");
 
-                        holo.getHologram().teleport(
-                                entity.getLocation().add(
-                                        0,
-                                        entity.getHeight() + 0.8 + 0.25 * followingHolos.indexOf(holo),
-                                        0
-                                )
-                        );
+                        Location newLoc = entity.getLocation().clone();
+                        newLoc.add(0, entity.getHeight() + 0.8 + (0.25 * followingHolos.indexOf(holo)), 0);
+                        System.out.println(newLoc.getY() + " - New Y");
+
+
+                        holo.getHologram().teleport(newLoc);
 
                         if (!holo.getHologram().getVisibilityManager().isVisibleByDefault()) {
                             VisibilityManager manager = holo.getHologram().getVisibilityManager();
 
                             List<Player> prevVisible = getList(holo.getUUID());
                             Collection<Player> nowVisible =
-                                    holo.getDistance() > 0 ?
+                                    !manager.isVisibleByDefault() ?
                                             holo.getHologram().getLocation().getNearbyPlayers(holo.getDistance())
                                             :
                                             holo.getHologram().getLocation().getNearbyPlayers(Bukkit.getViewDistance() * 16);
