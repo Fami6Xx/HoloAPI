@@ -32,7 +32,7 @@ public class FollowingHologram {
 
         holo = HologramsAPI.createHologram(
                 HoloAPI.getPlugin(HoloAPI.class),
-                toFollow.getLocation().add(0, toFollow.getHeight() + (0.25 * followHandler.getList(uuid).size()) + 0.8, 0)
+                toFollow.getLocation().add(0, toFollow.getHeight() + (0.25 * followHandler.getList(uuid).size()) + 0.5, 0)
         );
 
         holo.getVisibilityManager().setVisibleByDefault(isVisibleByDefault);

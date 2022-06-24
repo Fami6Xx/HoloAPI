@@ -10,9 +10,13 @@ import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.Random;
+
 public final class HoloAPI extends JavaPlugin implements Listener {
 
     // ToDo: Static hologram
+
+    Random random = new Random();
 
     @Override
     public void onEnable() {
@@ -30,41 +34,40 @@ public final class HoloAPI extends JavaPlugin implements Listener {
     @EventHandler
     public void onConnect(PlayerLoginEvent event){
         FollowingHologram holo = new FollowingHologram(event.getPlayer(), 5, false, false);
-        new UpdatingLine(holo.getHologram().appendTextLine("")){
-            @Override
-            public String update(){
-                return event.getPlayer().getHealth() + "";
+        for(int i = 0; i < random.nextInt(10); i++){
+            if(random.nextBoolean()) {
+                new UpdatingLine(holo.getHologram().appendTextLine("")) {
+                    @Override
+                    public String update() {
+                        return event.getPlayer().getHealth() + "";
+                    }
+                };
+            }else{
+                FollowingHologram boomRandom = new FollowingHologram(event.getPlayer(), 5, false, false);
+                boomRandom.getHologram().appendTextLine("Randomly created line");
             }
-        };
-        new UpdatingLine(holo.getHologram().appendTextLine("")){
-            @Override
-            public String update(){
-                return event.getPlayer().getHealth() + "";
-            }
-        };
-        new UpdatingLine(holo.getHologram().appendTextLine("")){
-            @Override
-            public String update(){
-                return event.getPlayer().getHealth() + "";
-            }
-        };
-        new UpdatingLine(holo.getHologram().appendTextLine("")){
-            @Override
-            public String update(){
-                return event.getPlayer().getHealth() + "";
-            }
-        };
+        }
     }
     @EventHandler
     public void onBob(EntitySpawnEvent event){
         FollowingHologram holo = new FollowingHologram(event.getEntity(), 5, false, false);
-        new UpdatingLine(holo.getHologram().appendTextLine(""), 5){
-            @Override
-            public String update(){
-                try{
-                    return ((LivingEntity) event.getEntity()).getHealth() + "";
-                }catch(Exception exc){return "Not Living Entity";}
+        for (int i = 0; i < random.nextInt(4); i++){
+            if(random.nextBoolean()) {
+                new UpdatingLine(holo.getHologram().appendTextLine(""), 5) {
+                    @Override
+                    public String update() {
+                        try {
+                            return ((LivingEntity) event.getEntity()).getHealth() + "";
+                        } catch (Exception exc) {
+                            return "Not Living Entity";
+                        }
+                    }
+                };
+            }else {
+                FollowingHologram boomRandom = new FollowingHologram(event.getEntity(), 5, false, false);
+                boomRandom.getHologram().appendTextLine("Randomly created line");
+
             }
-        };
+        }
     }
 }

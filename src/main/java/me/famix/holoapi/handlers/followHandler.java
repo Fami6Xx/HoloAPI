@@ -121,7 +121,8 @@ public class followHandler {
                             return;
                         }
                     }
-                    System.out.println("Next entity");
+
+                    double height = entity.getHeight() + 0.5;
 
                     for(FollowingHologram holo : followingHolos) {
                         if(holo.getHologram().isDeleted()){
@@ -131,14 +132,12 @@ public class followHandler {
                         }
 
                         // Move Hologram
-                        System.out.println(entity.getHeight() + 0.8 + (0.25 * followingHolos.indexOf(holo)) + " - Calculated height to add");
 
-                        Location newLoc = entity.getLocation().clone();
-                        newLoc.add(0, entity.getHeight() + 0.8 + (0.25 * followingHolos.indexOf(holo)), 0);
-                        System.out.println(newLoc.getY() + " - New Y");
+                        Location toTeleport = entity.getLocation();
+                        height += holo.getHologram().size() * 0.25;
+                        toTeleport.setY(toTeleport.getY() + height);
 
-
-                        holo.getHologram().teleport(newLoc);
+                        holo.getHologram().teleport(toTeleport);
 
                         if (!holo.getHologram().getVisibilityManager().isVisibleByDefault()) {
                             VisibilityManager manager = holo.getHologram().getVisibilityManager();
