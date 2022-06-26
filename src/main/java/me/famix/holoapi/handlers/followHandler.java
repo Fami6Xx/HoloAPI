@@ -2,9 +2,11 @@ package me.famix.holoapi.handlers;
 
 import com.gmail.filoghost.holographicdisplays.api.VisibilityManager;
 import me.famix.holoapi.HoloAPI;
+import me.famix.holoapi.misc.AExecuteQueue;
 import me.famix.holoapi.tools.rayCast.RayCast;
 import me.famix.holoapi.tools.rayCast.RayCastResult;
 import me.famix.holoapi.types.holograms.FollowingHologram;
+import org.apache.logging.log4j.core.async.BlockingQueueFactory;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
@@ -14,19 +16,23 @@ import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
 import java.util.*;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
 
 public class followHandler {
     //ToDo:
     // - Optimize
 
+    // This queue handles modification requests for HashMap from other threads
+    public static BlockingQueue<AExecuteQueue> queue = new LinkedBlockingQueue<>();
 
-    private static final HashMap<UUID, List<FollowingHologram>> map = new HashMap<>();
-    public static List<FollowingHologram> getList(UUID uuid) {
+    private static final HashMap<UUID, ArrayList<FollowingHologram>> map = new HashMap<>();
+    public static ArrayList<FollowingHologram> getList(UUID uuid) {
         return map.get(uuid) == null ? new ArrayList<>() : map.get(uuid);
     }
     public static void addToList(UUID uuid, FollowingHologram holo){
-        List<FollowingHologram> l = getList(uuid);
+        ArrayList<FollowingHologram> l = getList(uuid);
         l.add(holo);
         if(map.containsKey(uuid))
             map.replace(uuid, l);
@@ -34,7 +40,7 @@ public class followHandler {
             map.put(uuid, l);
     }
     public static void removeFromList(UUID uuid, FollowingHologram holo){
-        List<FollowingHologram> l = getList(uuid);
+        ArrayList<FollowingHologram> l = getList(uuid);
         l.remove(holo);
         if(l.size() != 0)
             map.replace(uuid, l);
@@ -42,7 +48,7 @@ public class followHandler {
             map.remove(uuid);
     }
     public static void clearList(UUID uuid){
-        List<FollowingHologram> list = getList(uuid);
+        ArrayList<FollowingHologram> list = getList(uuid);
 
         FollowingHologram[] arr = list.toArray(new FollowingHologram[0]);
 
@@ -99,7 +105,19 @@ public class followHandler {
 
             @Override
             public void run() {
-                ((HashMap<UUID, List<FollowingHologram>>) map.clone()).forEach(((uuid, followingHolos) -> {
+                // Checking queue and if there is something then executing it safely in this thread
+                if(queue.size() > 0){
+                    try {
+                        while(queue.size() > 0) {
+                            queue.take().execute();
+                        }
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                // Cloning HashMap because we are modifying it inside the forEach loop
+                ((HashMap<UUID, ArrayList<FollowingHologram>>) map.clone()).forEach(((uuid, followingHolos) -> {
                     Entity entity = Bukkit.getEntity(uuid);
 
                     // Check entity
@@ -124,7 +142,9 @@ public class followHandler {
 
                     double height = entity.getHeight() + 0.5;
 
-                    for(FollowingHologram holo : followingHolos) {
+                    FollowingHologram[] arr = followingHolos.toArray(new FollowingHologram[0]);
+
+                    for(FollowingHologram holo : arr) {
                         if(holo.getHologram().isDeleted()){
                             removeList(holo.getUUID());
                             removeFromList(uuid, holo);
@@ -181,7 +201,7 @@ public class followHandler {
 
     public static void stop(){
         task.cancel();
-        ((HashMap<UUID, List<FollowingHologram>>) map.clone()).forEach((uuid, holograms) -> holograms.forEach(followingHologram -> followingHologram.getHologram().delete()));
+        ((HashMap<UUID, ArrayList<FollowingHologram>>) map.clone()).forEach((uuid, holograms) -> holograms.forEach(followingHologram -> followingHologram.getHologram().delete()));
         map.clear();
     }
 }

@@ -4,12 +4,14 @@ import com.gmail.filoghost.holographicdisplays.api.Hologram;
 import com.gmail.filoghost.holographicdisplays.api.HologramsAPI;
 import me.famix.holoapi.HoloAPI;
 import me.famix.holoapi.handlers.followHandler;
+import me.famix.holoapi.misc.AExecuteQueue;
 import org.bukkit.entity.Entity;
 
 import java.util.UUID;
 
 public class FollowingHologram {
 
+    FollowingHologram followingHologram = this;
     Hologram holo;
     UUID uuid;
 
@@ -37,7 +39,12 @@ public class FollowingHologram {
 
         holo.getVisibilityManager().setVisibleByDefault(isVisibleByDefault);
 
-        followHandler.addToList(toFollow.getUniqueId(), this);
+        followHandler.queue.add(new AExecuteQueue() {
+            @Override
+            public void execute() {
+                followHandler.addToList(toFollow.getUniqueId(), followingHologram);
+            }
+        });
         followingUUID = toFollow.getUniqueId();
     }
 
@@ -66,7 +73,12 @@ public class FollowingHologram {
     }
 
     public void destroy(){
-        followHandler.removeFromList(followingUUID, this);
+        followHandler.queue.add(new AExecuteQueue() {
+            @Override
+            public void execute() {
+                followHandler.removeFromList(followingUUID, followingHologram);
+            }
+        });
         holo.delete();
     }
 
