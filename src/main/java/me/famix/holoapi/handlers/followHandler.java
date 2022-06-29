@@ -157,7 +157,13 @@ public class followHandler {
                         height += holo.getHologram().size() * 0.25;
                         toTeleport.setY(toTeleport.getY() + height);
 
-                        holo.getHologram().teleport(toTeleport);
+                        if(
+                                toTeleport.getX() != holo.getHologram().getX() ||
+                                toTeleport.getY() != holo.getHologram().getY() ||
+                                toTeleport.getZ() != holo.getHologram().getZ()
+                        ) {
+                            holo.getHologram().teleport(toTeleport);
+                        }
 
                         if (!holo.getHologram().getVisibilityManager().isVisibleByDefault()) {
                             VisibilityManager manager = holo.getHologram().getVisibilityManager();
