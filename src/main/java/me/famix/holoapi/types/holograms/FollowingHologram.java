@@ -56,9 +56,20 @@ public class FollowingHologram {
         return following;
     }
 
+    public void setVisibleThroughBlocks(boolean visible){
+        this.seeThrough = visible;
+    }
+
     public boolean canSeeThroughBlocks() {
         return seeThrough;
     }
+
+    public void setVisibleByDefault(boolean visible){
+        holo.getVisibilityManager().setVisibleByDefault(visible);
+        holo.getVisibilityManager().resetVisibilityAll();
+    }
+
+    public void setVisibleDistance(double distance){ this.distance = distance; }
 
     public double getDistance(){
         return distance;
