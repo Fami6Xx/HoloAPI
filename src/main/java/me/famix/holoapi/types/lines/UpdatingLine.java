@@ -31,7 +31,7 @@ public abstract class UpdatingLine {
                 if(!line.getParent().isDeleted()) {
                     String update = update();
                     if (!line.getText().equals(update)) {
-                        line.setText(update());
+                        line.setText(update);
                     }
                 }else {
                     cancel();
