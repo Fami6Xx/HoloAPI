@@ -8,9 +8,11 @@ This API is based on Spigot Minecraft API and can only be used in this game
 
 You must have Holographic Displays and ProtocolLib installed on your server
 
-- Maven and JavaDoc will be added after finalization of this project
-
 ## Features
 
-- Following holograms that are bonded to Entity
+- Holograms that are bonded to Entity
+- Automatic calculation of holograms height
+- API for Holograms to not be visible through walls
+- Updating lines that can be updated periodically in your plugin
+- Everything running ASYNC, so it doesn't cause lag to main thread
 - RayCast API
