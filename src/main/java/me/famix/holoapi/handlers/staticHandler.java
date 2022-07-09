@@ -5,9 +5,9 @@ import me.famix.holoapi.HoloAPI;
 import me.famix.holoapi.tools.rayCast.RayCast;
 import me.famix.holoapi.tools.rayCast.RayCastResult;
 import me.famix.holoapi.types.holograms.FollowingHologram;
+import me.famix.holoapi.types.holograms.StaticHologram;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
@@ -16,22 +16,9 @@ import org.bukkit.util.Vector;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class followHandler extends famiHandler{
-    //ToDo:
-    // - Optimize
-
-    public double calculateHeight(UUID uuid){
-        double[] height = {Bukkit.getEntity(uuid).getHeight() + 0.5};
-
-        getMap().get(uuid).forEach(holo -> {
-            height[0] += holo.getHologram().size() * 0.25;
-        });
-
-        return height[0];
-    }
-
+public class staticHandler extends famiHandler{
     @Override
-    public BukkitTask startTask(){
+    public BukkitTask startTask() {
         return new BukkitRunnable(){
             private final HashMap<UUID, List<Player>> hashMap = new HashMap<>();
             private List<Player> createList(UUID uuid){
@@ -51,19 +38,15 @@ public class followHandler extends famiHandler{
             }
 
 
-            public boolean checkConditions(Player player, FollowingHologram holo){
+            public boolean checkConditions(Player player, StaticHologram holo){
                 boolean returnValue = true;
 
-                if(player == holo.getFollowing()){
-                    return true;
-                }
-
                 Vector playerVector = player.getEyeLocation().toVector();
-                Vector entityVector = holo.getFollowing().getLocation().add(0, holo.getFollowing().getHeight(), 0).toVector();
+                Vector entityVector = holo.getHologram().getLocation().toVector();
                 Vector vector = playerVector.clone().subtract(entityVector.clone());
 
                 if(!holo.canSeeThroughBlocks()){
-                    Location startLoc = holo.getFollowing().getLocation().add(0, holo.getFollowing().getHeight(), 0).clone();
+                    Location startLoc = holo.getHologram().getLocation().clone();
 
                     RayCastResult result = new RayCast(vector, startLoc.getWorld(), startLoc, player.getEyeLocation(), holo.getDistance(), 0.1)
                             .enableIgnoreSeeThroughMaterials()
@@ -74,7 +57,6 @@ public class followHandler extends famiHandler{
                 }
                 return returnValue;
             }
-
             @Override
             public void run() {
                 // Checking queue and if there is something then executing it safely in this thread
@@ -89,52 +71,14 @@ public class followHandler extends famiHandler{
                 }
 
                 // Cloning HashMap because we are modifying it inside the forEach loop
-                ((HashMap<UUID, ArrayList<FollowingHologram>>) getMap().clone()).forEach(((uuid, followingHolos) -> {
-                    Entity entity = Bukkit.getEntity(uuid);
+                ((HashMap<UUID, ArrayList<StaticHologram>>) getMap().clone()).forEach(((uuid, staticHolograms) -> {
+                    StaticHologram[] arr = staticHolograms.toArray(new StaticHologram[0]);
 
-                    // Check entity
-                    if(entity == null){
-                        clearList(uuid);
-                        removeList(uuid);
-                        return;
-                    }
-                    if(!entity.isValid()){
-                        if(entity instanceof Player) {
-                            if(!((Player) entity).isOnline()){
-                                clearList(uuid);
-                                removeList(uuid);
-                                return;
-                            }
-                        }else{
-                            clearList(uuid);
-                            removeList(uuid);
-                            return;
-                        }
-                    }
-
-                    double height = entity.getHeight() + 0.5;
-
-                    FollowingHologram[] arr = followingHolos.toArray(new FollowingHologram[0]);
-
-                    for(FollowingHologram holo : arr) {
+                    for(StaticHologram holo : arr) {
                         if(holo.getHologram().isDeleted()){
                             removeList(holo.getUUID());
                             removeFromList(uuid, holo);
                             continue;
-                        }
-
-                        // Move Hologram
-
-                        Location toTeleport = entity.getLocation();
-                        height += holo.getHologram().size() * 0.25;
-                        toTeleport.setY(toTeleport.getY() + height);
-
-                        if(
-                                toTeleport.getX() != holo.getHologram().getX() ||
-                                toTeleport.getY() != holo.getHologram().getY() ||
-                                toTeleport.getZ() != holo.getHologram().getZ()
-                        ) {
-                            holo.getHologram().teleport(toTeleport);
                         }
 
                         if (!holo.getHologram().getVisibilityManager().isVisibleByDefault()) {
@@ -174,6 +118,6 @@ public class followHandler extends famiHandler{
                     }
                 }));
             }
-        }.runTaskTimerAsynchronously(HoloAPI.getPlugin(HoloAPI.class), 0L, 1L);
+        }.runTaskTimerAsynchronously(HoloAPI.getProvidingPlugin(HoloAPI.class), 0L, 1L);
     }
 }
