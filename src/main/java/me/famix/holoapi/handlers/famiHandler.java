@@ -14,6 +14,17 @@ public abstract class famiHandler {
     // This queue handles modification requests for anything from other threads
     public BlockingQueue<AExecuteQueue> queue = new LinkedBlockingQueue<>();
 
+    public void handleQueue(){
+        if(queue.size() > 0){
+            try {
+                while(queue.size() > 0) {
+                    queue.take().execute();
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     private final HashMap<UUID, ArrayList<famiHologram>> map = new HashMap<>();
 

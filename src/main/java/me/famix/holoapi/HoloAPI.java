@@ -1,7 +1,7 @@
 package me.famix.holoapi;
 
-import me.famix.holoapi.handlers.followHandler;
-import me.famix.holoapi.handlers.staticHandler;
+import me.famix.holoapi.handlers.FollowHandler;
+import me.famix.holoapi.handlers.VisibilityHandler;
 import me.famix.holoapi.types.holograms.FollowingHologram;
 import me.famix.holoapi.types.lines.UpdatingLine;
 import org.bukkit.entity.LivingEntity;
@@ -14,21 +14,18 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.util.Random;
 
 public final class HoloAPI extends JavaPlugin implements Listener {
-
-    // ToDo: Better Handlers (FollowingHandler, VisibilityHandler) not this junk of code
-
     Random random = new Random();
-    followHandler followHandler;
-    staticHandler staticHandler;
+    FollowHandler followHandler;
+    VisibilityHandler VisibilityHandler;
 
     @Override
     public void onEnable() {
         // Plugin startup logic
-        this.followHandler = new followHandler();
-        this.staticHandler = new staticHandler();
+        this.followHandler = new FollowHandler();
+        this.VisibilityHandler = new VisibilityHandler();
 
         this.followHandler.start();
-        this.staticHandler.start();
+        this.VisibilityHandler.start();
 
         getServer().getPluginManager().registerEvents(this, this);
     }
@@ -37,13 +34,13 @@ public final class HoloAPI extends JavaPlugin implements Listener {
     public void onDisable() {
         // Plugin shutdown logic
         this.followHandler.stop();
-        this.staticHandler.stop();
+        this.VisibilityHandler.stop();
     }
 
-    public followHandler getFollowHandler(){
+    public FollowHandler getFollowHandler(){
         return this.followHandler;
     }
-    public staticHandler getStaticHandler(){return this.staticHandler;}
+    public VisibilityHandler getVisibilityHandler(){return this.VisibilityHandler;}
     // Methods below are there only for testing purposes
     @EventHandler
     public void onConnect(PlayerLoginEvent event){

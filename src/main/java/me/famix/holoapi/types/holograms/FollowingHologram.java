@@ -3,6 +3,7 @@ package me.famix.holoapi.types.holograms;
 import com.gmail.filoghost.holographicdisplays.api.HologramsAPI;
 import me.famix.holoapi.HoloAPI;
 import me.famix.holoapi.misc.AExecuteQueue;
+import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 
 import java.util.UUID;
@@ -10,12 +11,9 @@ import java.util.UUID;
 public class FollowingHologram extends famiHologram{
 
     FollowingHologram followingHologram = this;
-    UUID uuid = UUID.randomUUID();
 
     HoloAPI api = (HoloAPI) HoloAPI.getProvidingPlugin(HoloAPI.class);
 
-    boolean seeThrough;
-    double distance;
     Entity following;
     UUID followingUUID;
 
@@ -32,11 +30,11 @@ public class FollowingHologram extends famiHologram{
                 )
         );
         following = toFollow;
-        seeThrough = seeThroughBlocks;
+        updateVisibility(visibleDistance, seeThroughBlocks);
         if(!isVisibleByDefault)
-            this.distance = visibleDistance;
+            updateVisibility(visibleDistance, seeThroughBlocks);
         else
-            this.distance = -1;
+            updateVisibility(-1, seeThroughBlocks);
 
         getHologram().getVisibilityManager().setVisibleByDefault(isVisibleByDefault);
 
@@ -46,6 +44,17 @@ public class FollowingHologram extends famiHologram{
                 api.getFollowHandler().addToList(toFollow.getUniqueId(), followingHologram);
             }
         });
+        if(!isVisibleByDefault) {
+            api.getVisibilityHandler().queue.add(
+                    new AExecuteQueue() {
+                        @Override
+                        public void execute() {
+                            api.getVisibilityHandler().addToList(getUUID(), followingHologram);
+                        }
+                    }
+            );
+        }
+
         followingUUID = toFollow.getUniqueId();
     }
 
@@ -53,31 +62,9 @@ public class FollowingHologram extends famiHologram{
         return following;
     }
 
-    public void setVisibleThroughBlocks(boolean visible){
-        this.seeThrough = visible;
-    }
-
-    public boolean canSeeThroughBlocks() {
-        return seeThrough;
-    }
-
-    public void setVisibleByDefault(boolean visible){
-        getHologram().getVisibilityManager().setVisibleByDefault(visible);
-        getHologram().getVisibilityManager().resetVisibilityAll();
-    }
-
-    public void setVisibleDistance(double distance){ this.distance = distance; }
-
-    public double getDistance(){
-        return distance;
-    }
-
-    public int getIntDistance(){
-        return (int) Math.ceil(distance);
-    }
-
-    public UUID getUUID() {
-        return uuid;
+    @Override
+    public Location getBaseLocation() {
+        return following.getLocation().clone().add(0, following.getHeight(), 0);
     }
 
     @Override
@@ -88,11 +75,17 @@ public class FollowingHologram extends famiHologram{
                 api.getFollowHandler().removeFromList(followingUUID, followingHologram);
             }
         });
+        api.getVisibilityHandler().queue.add(new AExecuteQueue() {
+            @Override
+            public void execute() {
+                api.getVisibilityHandler().removeFromList(followingUUID, followingHologram);
+            }
+        });
         getHologram().delete();
     }
 
     @Override
     public String toString(){
-        return "FollowingHologram [uuid: " + uuid + ", canSeeThrough:" + seeThrough + ", maxVisibleDistance:" + distance + ", " + getHologram().toString() + "]";
+        return "FollowingHologram [uuid: " + getUUID() + ", canSeeThrough:" + canSeeThroughBlocks() + ", maxVisibleDistance:" + getDistance() + ", " + getHologram().toString() + "]";
     }
 }

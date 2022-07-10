@@ -4,10 +4,9 @@ import com.gmail.filoghost.holographicdisplays.api.VisibilityManager;
 import me.famix.holoapi.HoloAPI;
 import me.famix.holoapi.tools.rayCast.RayCast;
 import me.famix.holoapi.tools.rayCast.RayCastResult;
-import me.famix.holoapi.types.holograms.FollowingHologram;
+import me.famix.holoapi.types.holograms.famiHologram;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
@@ -16,22 +15,10 @@ import org.bukkit.util.Vector;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class followHandler extends famiHandler{
-    //ToDo:
-    // - Optimize
-
-    public double calculateHeight(UUID uuid){
-        double[] height = {Bukkit.getEntity(uuid).getHeight() + 0.5};
-
-        getMap().get(uuid).forEach(holo -> {
-            height[0] += holo.getHologram().size() * 0.25;
-        });
-
-        return height[0];
-    }
+public class VisibilityHandler extends famiHandler{
 
     @Override
-    public BukkitTask startTask(){
+    public BukkitTask startTask() {
         return new BukkitRunnable(){
             private final HashMap<UUID, List<Player>> hashMap = new HashMap<>();
             private List<Player> createList(UUID uuid){
@@ -51,19 +38,15 @@ public class followHandler extends famiHandler{
             }
 
 
-            public boolean checkConditions(Player player, FollowingHologram holo){
+            public boolean checkConditions(Player player, famiHologram holo){
                 boolean returnValue = true;
 
-                if(player == holo.getFollowing()){
-                    return true;
-                }
-
                 Vector playerVector = player.getEyeLocation().toVector();
-                Vector entityVector = holo.getFollowing().getLocation().add(0, holo.getFollowing().getHeight(), 0).toVector();
+                Vector entityVector = holo.getBaseLocation().toVector();
                 Vector vector = playerVector.clone().subtract(entityVector.clone());
 
                 if(!holo.canSeeThroughBlocks()){
-                    Location startLoc = holo.getFollowing().getLocation().add(0, holo.getFollowing().getHeight(), 0).clone();
+                    Location startLoc = holo.getBaseLocation();
 
                     RayCastResult result = new RayCast(vector, startLoc.getWorld(), startLoc, player.getEyeLocation(), holo.getDistance(), 0.1)
                             .enableIgnoreSeeThroughMaterials()
@@ -74,67 +57,19 @@ public class followHandler extends famiHandler{
                 }
                 return returnValue;
             }
-
             @Override
             public void run() {
                 // Checking queue and if there is something then executing it safely in this thread
-                if(queue.size() > 0){
-                    try {
-                        while(queue.size() > 0) {
-                            queue.take().execute();
-                        }
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
+                handleQueue();
 
-                // Cloning HashMap because we are modifying it inside the forEach loop
-                ((HashMap<UUID, ArrayList<FollowingHologram>>) getMap().clone()).forEach(((uuid, followingHolos) -> {
-                    Entity entity = Bukkit.getEntity(uuid);
+                ((HashMap<UUID, ArrayList<famiHologram>>) getMap().clone()).forEach(((uuid, famiHolograms) -> {
+                    famiHologram[] arr = famiHolograms.toArray(new famiHologram[0]);
 
-                    // Check entity
-                    if(entity == null){
-                        clearList(uuid);
-                        removeList(uuid);
-                        return;
-                    }
-                    if(!entity.isValid()){
-                        if(entity instanceof Player) {
-                            if(!((Player) entity).isOnline()){
-                                clearList(uuid);
-                                removeList(uuid);
-                                return;
-                            }
-                        }else{
-                            clearList(uuid);
-                            removeList(uuid);
-                            return;
-                        }
-                    }
-
-                    double height = entity.getHeight() + 0.5;
-
-                    FollowingHologram[] arr = followingHolos.toArray(new FollowingHologram[0]);
-
-                    for(FollowingHologram holo : arr) {
-                        if(holo.getHologram().isDeleted()){
-                            removeList(holo.getUUID());
+                    for(famiHologram holo : arr) {
+                        if (holo.getHologram().isDeleted()) {
                             removeFromList(uuid, holo);
+                            removeList(holo.getUUID());
                             continue;
-                        }
-
-                        // Move Hologram
-
-                        Location toTeleport = entity.getLocation();
-                        height += holo.getHologram().size() * 0.25;
-                        toTeleport.setY(toTeleport.getY() + height);
-
-                        if(
-                                toTeleport.getX() != holo.getHologram().getX() ||
-                                toTeleport.getY() != holo.getHologram().getY() ||
-                                toTeleport.getZ() != holo.getHologram().getZ()
-                        ) {
-                            holo.getHologram().teleport(toTeleport);
                         }
 
                         if (!holo.getHologram().getVisibilityManager().isVisibleByDefault()) {
@@ -149,10 +84,10 @@ public class followHandler extends famiHandler{
 
                             // Hide to everyone who left visible distance or doesn't pass conditions
                             prevVisible.forEach(player -> {
-                                if(!nowVisible.contains(player)) {
+                                if (!nowVisible.contains(player)) {
                                     manager.hideTo(player);
                                 }
-                                if(!checkConditions(player, holo)){
+                                if (!checkConditions(player, holo)) {
                                     manager.hideTo(player);
                                 }
                             });
